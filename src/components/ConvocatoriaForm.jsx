@@ -26,6 +26,7 @@ export default function ConvocatoriaForm({ onSuccess }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          proyecto: 'cajon-peruano',
           nombre,
           correo,
           juntaVecinal,

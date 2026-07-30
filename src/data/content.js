@@ -92,6 +92,7 @@ export const aliados = [
   { nombre: 'Universidad Nacional Daniel Alomía Robles (UNDAR)', rol: 'Infraestructura, préstamo de equipos de grabación y acceso al laboratorio de la Vicepresidencia de Investigación.' },
   { nombre: 'Municipalidad Provincial de Huánuco (MPH)', rol: 'Facilidades para la convocatoria y acceso a los espacios de las Juntas Vecinales, a través del Área de Centros Poblados y Juntas Vecinales.' },
   { nombre: 'Asociación de Artistas Freestyle', rol: 'Artistas freestyle de Huánuco que aportan las secciones de improvisación rítmica del álbum.' },
+  { nombre: 'Red de Juventudes de Huánuco (REDHCO)', rol: 'Articulación con redes juveniles y apoyo en la difusión y convocatoria de participantes de la región de Huánuco.' },
 ]
 
 export const equipo = [

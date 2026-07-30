@@ -47,8 +47,49 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
     setError('')
     setStep('pago')
 
-    // Aquí se integra la API de Culqui (checkout / token + cargo en backend).
-    // Se simula el flujo de pago mientras se conecta el backend real.
+    // ── Culqui: Integración (COMENTADO - activar cuando se tengan los tokens) ──
+    // Para activar, descomentar el bloque de abajo y comentar el setTimeout
+    //
+    // try {
+    //   const culqi = new window.Culqi(process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY || 'pk_test_...')
+    //   culqi.openCheckout({
+    //     amount: Number(monto) * 100,
+    //     currency: 'PEN',
+    //     title: 'Donación Cajón Peruano',
+    //     description: `Donación de S/ ${monto}`,
+    //     onToken: async (token) => {
+    //       // Enviar token al backend para procesar el cargo
+    //       setProcesando(true)
+    //       try {
+    //         const res = await fetch('/api/pago', {
+    //           method: 'POST',
+    //           headers: { 'Content-Type': 'application/json' },
+    //           body: JSON.stringify({ token: token.id, amount: Number(monto) * 100 })
+    //         })
+    //         const data = await res.json()
+    //         if (data.ok) {
+    //           setProcesando(false)
+    //           setStep('datos')
+    //         } else {
+    //           setError('Error al procesar el pago. Intenta de nuevo.')
+    //           setProcesando(false)
+    //           setStep('monto')
+    //         }
+    //       } catch {
+    //         setError('Error de conexión con el servidor de pagos.')
+    //         setProcesando(false)
+    //         setStep('monto')
+    //       }
+    //     },
+    //     onClose: () => {
+    //       setStep('monto')
+    //     }
+    //   })
+    // } catch {
+    //   setError('Error al inicializar Culqui.')
+    // }
+
+    // SIMULACIÓN: Se mantiene mientras no se tengan los tokens de Culqui
     setProcesando(true)
     setTimeout(() => {
       setProcesando(false)
@@ -56,7 +97,7 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
     }, 1400)
   }
 
-  function handleFinalizar() {
+  async function handleFinalizar() {
     if (!anonimo && !autoriza) {
       setError('Marca la autorización para mostrar tu nombre, o dona en anonimato.')
       return
@@ -66,6 +107,7 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
       return
     }
     setError('')
+    setProcesando(true)
 
     const donante = anonimo
       ? { nombre: 'Donante anónimo', monto: Number(monto), anonimo: true }
@@ -75,6 +117,34 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
           anonimo: false,
         }
 
+    try {
+      const res = await fetch('/api/donaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          proyecto: 'cajon-peruano',
+          nombre: donante.nombre,
+          monto: donante.monto,
+          anonimo: donante.anonimo,
+          fuente: 'cajon-peruano',
+          fee: 0,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!data.ok) {
+        setError('Hubo un error al registrar tu donación. Intenta de nuevo.')
+        setProcesando(false)
+        return
+      }
+    } catch {
+      setError('Error de conexión. Verifica tu internet e intenta de nuevo.')
+      setProcesando(false)
+      return
+    }
+
+    setProcesando(false)
     onDonacionCompletada?.(donante)
     setStep('exito')
   }

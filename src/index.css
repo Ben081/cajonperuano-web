@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  /* Paleta - cajon de madera x consola de grabacion */
+  --color-wood: #3b2415;
+  --color-wood-deep: #2a1a0f;
+  --color-cream: #f5ede0;
+  --color-cream-dim: #ebdfc9;
+  --color-copper: #c2703d;
+  --color-copper-bright: #d98a54;
+  --color-meter: #e8a33d;
+  --color-meter-bright: #f2b95c;
+  --color-text-on-cream: #2a2019;
+  --color-stone: #a8968a;
+
+  --font-display: "Spectral", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-wood);
+  font-family: var(--font-body);
+  color: var(--color-cream);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-meter) 45%, transparent);
+  color: var(--color-wood-deep);
+}
+
+.wood-border {
+  position: relative;
+  border: 1px solid color-mix(in oklab, var(--color-copper) 45%, transparent);
+}
+
+/* Press feedback for all pressable elements */
+button, a[role="button"], [role="button"] {
+  transition: transform 160ms var(--ease-out);
+}
+button:active, a[role="button"]:active, [role="button"]:active {
+  transform: scale(0.97);
+}
+
+/* Focus visible for accessibility */
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--color-meter);
+  outline-offset: 2px;
+}
+
+/* Input focus transition */
+input, textarea, select {
+  transition: border-color 200ms var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -54,7 +54,7 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
     //   culqi.openCheckout({
     //     amount: Number(monto) * 100,
     //     currency: 'PEN',
-    //     title: 'Donación Freestyle Católico',
+    //     title: 'Donación Cajón Peruano',
     //     description: `Donación de S/ ${monto}`,
     //     onToken: async (token) => {
     //       setProcesando(true)
@@ -120,11 +120,11 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          proyecto: 'freestyle-catolico',
+          proyecto: 'cajon-peruano',
           nombre: donante.nombre,
           monto: donante.monto,
           anonimo: donante.anonimo,
-          fuente: 'freestyle-catolico',
+          fuente: 'cajon-peruano',
         }),
       })
 
@@ -157,7 +157,7 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-ink-deep/80 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-wood-deep/80 p-4 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -169,11 +169,11 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
             exit={{ opacity: 0, scale: 0.94, y: 12 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
             onClick={(e) => e.stopPropagation()}
-            className="illuminated-border relative w-full max-w-md rounded-2xl bg-ink p-7"
+            className="wood-border relative w-full max-w-md rounded-2xl bg-wood p-7"
           >
             <button
               onClick={handleClose}
-              className="absolute right-5 top-5 text-parchment/50 transition hover:text-parchment"
+              className="absolute right-5 top-5 text-cream/50 transition hover:text-cream"
               aria-label="Cerrar"
             >
               <X size={20} />
@@ -181,17 +181,17 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
 
             {step === 'monto' && (
               <form onSubmit={handleContinuarMonto}>
-                <div className="mb-1 flex items-center gap-2 font-label text-xs font-semibold tracking-[0.1em] text-battle-bright">
+                <div className="mb-1 flex items-center gap-2 font-mono text-xs font-semibold tracking-[0.1em] text-copper-bright">
                   <Heart size={14} /> APOYAR EL PROYECTO
                 </div>
-                <h3 className="mt-2 font-display text-xl font-semibold text-parchment">
+                <h3 className="mt-2 font-display text-xl font-semibold text-cream">
                   Elige el monto de tu donación
                 </h3>
-                <p className="mt-2 font-body text-[13px] text-parchment/55">
+                <p className="mt-2 font-body text-[13px] text-cream/55">
                   Monto mínimo S/ {config.monto_minimo}
                 </p>
 
-                <label className="mt-5 block font-label text-[12px] font-semibold text-parchment/70">
+                <label className="mt-5 block font-mono text-[12px] font-semibold text-cream/70">
                   Monto (S/)
                 </label>
                 <input
@@ -201,7 +201,7 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
                   value={monto}
                   onChange={(e) => setMonto(e.target.value)}
                   placeholder={String(config.monto_minimo)}
-                  className="mt-1.5 w-full rounded-lg border border-gold/25 bg-ink-deep px-4 py-3 font-body text-parchment outline-none focus:border-gold"
+                  className="mt-1.5 w-full rounded-lg border border-meter/25 bg-wood-deep px-4 py-3 font-body text-cream outline-none focus:border-meter"
                 />
 
                 <div className="mt-3 flex gap-2">
@@ -210,18 +210,18 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
                       type="button"
                       key={m}
                       onClick={() => setMonto(String(m))}
-                      className="rounded-full border border-gold/25 px-3.5 py-1.5 font-label text-[12.5px] text-parchment/70 transition hover:border-gold"
+                      className="rounded-full border border-meter/25 px-3.5 py-1.5 font-mono text-[12.5px] text-cream/70 transition hover:border-meter"
                     >
                       S/ {m}
                     </button>
                   ))}
                 </div>
 
-                {error && <p className="mt-3 font-body text-[13px] text-battle-bright">{error}</p>}
+                {error && <p className="mt-3 font-body text-[13px] text-copper-bright">{error}</p>}
 
                 <button
                   type="submit"
-                  className="mt-6 w-full rounded-lg bg-battle/90 py-3.5 font-label text-sm font-semibold text-parchment transition hover:bg-battle-bright"
+                  className="mt-6 w-full rounded-lg bg-copper/90 py-3.5 font-mono text-sm font-semibold text-cream transition hover:bg-copper-bright"
                 >
                   Continuar con Culqui
                 </button>
@@ -230,8 +230,8 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
 
             {step === 'pago' && (
               <div className="flex flex-col items-center py-8 text-center">
-                <div className="h-9 w-9 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
-                <p className="mt-5 font-body text-[14px] text-parchment/70">
+                <div className="h-9 w-9 animate-spin rounded-full border-2 border-meter/30 border-t-meter" />
+                <p className="mt-5 font-body text-[14px] text-cream/70">
                   Procesando tu pago de S/ {monto} de forma segura…
                 </p>
               </div>
@@ -239,21 +239,21 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
 
             {step === 'datos' && (
               <div>
-                <h3 className="font-display text-xl font-semibold text-parchment">
+                <h3 className="font-display text-xl font-semibold text-cream">
                   ¡Pago confirmado!
                 </h3>
-                <p className="mt-2 font-body text-[13.5px] text-parchment/60">
+                <p className="mt-2 font-body text-[13.5px] text-cream/60">
                   ¿Cómo quieres aparecer en la sección de donadores?
                 </p>
 
-                <label className="mt-5 flex items-center gap-3 rounded-lg border border-gold/20 bg-ink-deep px-4 py-3">
+                <label className="mt-5 flex items-center gap-3 rounded-lg border border-meter/20 bg-wood-deep px-4 py-3">
                   <input
                     type="checkbox"
                     checked={anonimo}
                     onChange={(e) => setAnonimo(e.target.checked)}
-                    className="h-4 w-4 accent-gold"
+                    className="h-4 w-4 accent-meter"
                   />
-                  <span className="font-body text-[13.5px] text-parchment/85">
+                  <span className="font-body text-[13.5px] text-cream/85">
                     Donar en anonimato
                   </span>
                 </label>
@@ -261,25 +261,25 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
                 {!anonimo && (
                   <div className="mt-4 flex flex-col gap-3">
                     <div>
-                      <label className="block font-label text-[12px] font-semibold text-parchment/70">
+                      <label className="block font-mono text-[12px] font-semibold text-cream/70">
                         Nombre
                       </label>
                       <input
                         value={nombre}
                         onChange={(e) => setNombre(e.target.value)}
                         placeholder="ej. maria jose"
-                        className="mt-1.5 w-full rounded-lg border border-gold/25 bg-ink-deep px-4 py-2.5 font-body text-parchment outline-none focus:border-gold"
+                        className="mt-1.5 w-full rounded-lg border border-meter/25 bg-wood-deep px-4 py-2.5 font-body text-cream outline-none focus:border-meter"
                       />
                     </div>
                     <div>
-                      <label className="block font-label text-[12px] font-semibold text-parchment/70">
+                      <label className="block font-mono text-[12px] font-semibold text-cream/70">
                         Apellido
                       </label>
                       <input
                         value={apellido}
                         onChange={(e) => setApellido(e.target.value)}
                         placeholder="ej. rojas de la cruz"
-                        className="mt-1.5 w-full rounded-lg border border-gold/25 bg-ink-deep px-4 py-2.5 font-body text-parchment outline-none focus:border-gold"
+                        className="mt-1.5 w-full rounded-lg border border-meter/25 bg-wood-deep px-4 py-2.5 font-body text-cream outline-none focus:border-meter"
                       />
                     </div>
 
@@ -288,9 +288,9 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
                         type="checkbox"
                         checked={autoriza}
                         onChange={(e) => setAutoriza(e.target.checked)}
-                        className="mt-0.5 h-4 w-4 accent-gold"
+                        className="mt-0.5 h-4 w-4 accent-meter"
                       />
-                      <span className="font-body text-[12.5px] leading-snug text-parchment/65">
+                      <span className="font-body text-[12.5px] leading-snug text-cream/65">
                         Autorizo el uso de mi nombre y apellido para que se
                         muestre en la sección de donadores.
                       </span>
@@ -298,12 +298,12 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
                   </div>
                 )}
 
-                {error && <p className="mt-3 font-body text-[13px] text-battle-bright">{error}</p>}
+                {error && <p className="mt-3 font-body text-[13px] text-copper-bright">{error}</p>}
 
                 <button
                   onClick={handleFinalizar}
                   disabled={procesando}
-                  className="mt-6 w-full rounded-lg bg-gold py-3.5 font-label text-sm font-semibold text-ink-deep transition hover:bg-gold-bright disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-6 w-full rounded-lg bg-meter py-3.5 font-mono text-sm font-semibold text-wood-deep transition hover:bg-meter-bright disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {procesando ? 'Registrando…' : 'Finalizar'}
                 </button>
@@ -312,17 +312,17 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
 
             {step === 'exito' && (
               <div className="flex flex-col items-center py-6 text-center">
-                <CheckCircle2 className="text-gold-bright" size={44} />
-                <h3 className="mt-4 font-display text-xl font-semibold text-parchment">
+                <CheckCircle2 className="text-meter-bright" size={44} />
+                <h3 className="mt-4 font-display text-xl font-semibold text-cream">
                   ¡Gracias por tu donación!
                 </h3>
-                <p className="mt-2 font-body text-[13.5px] text-parchment/60">
+                <p className="mt-2 font-body text-[13.5px] text-cream/60">
                   Tu aporte de S/ {monto} ayuda a llevar este programa a más
-                  instituciones.
+                  participantes.
                 </p>
                 <button
                   onClick={handleClose}
-                  className="mt-6 rounded-lg border border-gold/40 px-6 py-2.5 font-label text-sm font-semibold text-parchment transition hover:bg-gold/10"
+                  className="mt-6 rounded-lg border border-meter/40 px-6 py-2.5 font-mono text-sm font-semibold text-cream transition hover:bg-meter/10"
                 >
                   Cerrar
                 </button>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
+import { API_BASE } from '../hooks/useConfigFrate'
 
 const HABILIDADES = ['Voluntario/a','Artista', 'Beneficiario', 'Otro']
 
@@ -22,7 +23,7 @@ export default function ConvocatoriaForm({ onSuccess }) {
     const mensaje = form.mensaje?.value || ''
 
     try {
-      const res = await fetch('/api/convocatoria', {
+      const res = await fetch(`${API_BASE}/api/convocatoria`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

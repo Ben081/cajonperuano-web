@@ -5,6 +5,7 @@ import { Menu, X } from 'lucide-react'
 const EASE_OUT = [0.23, 1, 0.32, 1]
 
 const NAV = [
+  { href: 'https://frate.lat', label: 'FRATE' },
   { href: '#proyecto', label: 'Proyecto' },
   { href: '#album', label: 'Álbum' },
   { href: '#metodologia', label: 'Metodología' },

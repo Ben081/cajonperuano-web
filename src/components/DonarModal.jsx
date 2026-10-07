@@ -1,10 +1,27 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X, Heart, CheckCircle2 } from 'lucide-react'
 import { normalizeFullName } from '../utils/normalizeName'
 import useConfigFrate, { API_BASE } from '../hooks/useConfigFrate'
 
-// Los pasos: monto -> pago (Culqui) -> datos (anónimo o no) -> confirmación
+const PROYECTO = 'cajon-peruano'
+
+// ── Helper: carga un <script> una sola vez, aunque se llame varias veces ──
+const scriptsCargados = {}
+function cargarScript(src) {
+  if (scriptsCargados[src]) return scriptsCargados[src]
+  scriptsCargados[src] = new Promise((resolve, reject) => {
+    const el = document.createElement('script')
+    el.src = src
+    el.onload = resolve
+    el.onerror = reject
+    document.body.appendChild(el)
+  })
+  return scriptsCargados[src]
+}
+
+// Los pasos: monto -> pago (Culqi) -> datos (anónimo o no) -> confirmación
+// Internamente también puede pasar por '3ds' si el banco pide verificación extra.
 export default function DonarModal({ open, onClose, onDonacionCompletada }) {
   const { config } = useConfigFrate()
   const [step, setStep] = useState('monto')
@@ -16,6 +33,11 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
   const [apellido, setApellido] = useState('')
   const [autoriza, setAutoriza] = useState(false)
 
+  // Guardamos el token de Culqi aquí hasta que se confirme la donación.
+  const tokenPagoRef = useRef(null)
+  // Guardamos los datos necesarios para completar el paso 3DS si Culqi lo pide.
+  const pendiente3dsRef = useRef(null) // { donacionId, email }
+
   function reset() {
     setStep('monto')
     setMonto('')
@@ -25,11 +47,62 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
     setNombre('')
     setApellido('')
     setAutoriza(false)
+    tokenPagoRef.current = null
+    pendiente3dsRef.current = null
   }
 
   function handleClose() {
     onClose()
     setTimeout(reset, 250)
+  }
+
+  // ── Abre el Culqi Checkout real y tokeniza la tarjeta/Yape ──────────
+  async function abrirCulqiCheckout(montoNum) {
+    if (!config.culqi_public_key) {
+      setError('Los pagos no están disponibles en este momento. Intenta más tarde.')
+      setStep('monto')
+      return
+    }
+
+    try {
+      await cargarScript('https://checkout.culqi.com/js/v4')
+
+      window.Culqi.publicKey = config.culqi_public_key
+      window.Culqi.settings({
+        title: 'Donación Cajón Peruano',
+        currency: 'PEN',
+        amount: Math.round(montoNum * 100),
+      })
+      window.Culqi.options({
+        lang: 'auto',
+        installments: false,
+        paymentMethods: {
+          tarjeta: true,
+          yape: true,
+          bancaMovil: false,
+          agente: false,
+          billetera: false, // Pendiente: requiere Orden + Webhook (SSL)
+          cuotealo: false,
+        },
+      })
+
+      window.culqi = function () {
+        if (window.Culqi.token) {
+          tokenPagoRef.current = window.Culqi.token.id
+          window.Culqi.close()
+          setStep('datos')
+        } else if (window.Culqi.error) {
+          console.error('Error de Culqi:', window.Culqi.error)
+          setError('No se pudo procesar el pago. Intenta de nuevo.')
+          setStep('monto')
+        }
+      }
+
+      window.Culqi.open()
+    } catch {
+      setError('No se pudo cargar el formulario de pago. Revisa tu conexión.')
+      setStep('monto')
+    }
   }
 
   function handleContinuarMonto(e) {
@@ -45,54 +118,75 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
     }
     setError('')
     setStep('pago')
+    abrirCulqiCheckout(valor)
+  }
 
-    // ── Culqui: Integración (COMENTADO - activar cuando se tengan los tokens) ──
-    // Para activar, descomentar el bloque de abajo y comentar el setTimeout
-    //
-    // try {
-    //   const culqi = new window.Culqi(process.env.NEXT_PUBLIC_CULQI_PUBLIC_KEY || 'pk_test_...')
-    //   culqi.openCheckout({
-    //     amount: Number(monto) * 100,
-    //     currency: 'PEN',
-    //     title: 'Donación Cajón Peruano',
-    //     description: `Donación de S/ ${monto}`,
-    //     onToken: async (token) => {
-    //       setProcesando(true)
-    //       try {
-    //         const res = await fetch(`${API_BASE}/api/pago`, {
-    //           method: 'POST',
-    //           headers: { 'Content-Type': 'application/json' },
-    //           body: JSON.stringify({ token: token.id, amount: Number(monto) * 100 })
-    //         })
-    //         const data = await res.json()
-    //         if (data.ok) {
-    //           setProcesando(false)
-    //           setStep('datos')
-    //         } else {
-    //           setError('Error al procesar el pago. Intenta de nuevo.')
-    //           setProcesando(false)
-    //           setStep('monto')
-    //         }
-    //       } catch {
-    //         setError('Error de conexión con el servidor de pagos.')
-    //         setProcesando(false)
-    //         setStep('monto')
-    //       }
-    //     },
-    //     onClose: () => {
-    //       setStep('monto')
-    //     }
-    //   })
-    // } catch {
-    //   setError('Error al inicializar Culqui.')
-    // }
+  // ── Completa la autenticación 3DS cuando el banco la exige ──────────
+  async function completar3DS(donacionId) {
+    await cargarScript('https://3ds.culqi.com')
 
-    // SIMULACIÓN: Se mantiene mientras no se tengan los tokens de Culqui
-    setProcesando(true)
-    setTimeout(() => {
-      setProcesando(false)
-      setStep('datos')
-    }, 1400)
+    window.Culqi3DS.publicKey = config.culqi_public_key
+    window.Culqi3DS.settings = {
+      charge: {
+        totalAmount: Math.round(Number(monto) * 100),
+        returnUrl: window.location.href,
+      },
+      card: {
+        email: 'donante@frate.lat',
+      },
+    }
+
+    let deviceFingerPrintId = null
+    try {
+      deviceFingerPrintId = await window.Culqi3DS.generateDevice()
+    } catch {
+      // Si falla, seguimos sin él; el backend igual intenta el cargo.
+    }
+
+    const handleMensaje3DS = async (event) => {
+      if (event.origin !== window.location.origin) return
+      const response = event.data
+      if (response.loading) return
+
+      if (response.parameters3DS) {
+        window.removeEventListener('message', handleMensaje3DS)
+        try {
+          const res = await fetch(`${API_BASE}/api/donaciones/${donacionId}/confirmar-3ds`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token_pago: tokenPagoRef.current,
+              authentication_3DS: response.parameters3DS,
+              device_finger_print_id: deviceFingerPrintId,
+            }),
+          })
+          const data = await res.json()
+          if (data.ok) {
+            onDonacionCompletada?.({ nombre, monto: Number(monto), anonimo })
+            setProcesando(false)
+            setStep('exito')
+          } else {
+            setError(data.error || 'El pago no pudo confirmarse tras la verificación.')
+            setProcesando(false)
+            setStep('monto')
+          }
+        } catch {
+          setError('Error de conexión al confirmar el pago.')
+          setProcesando(false)
+          setStep('monto')
+        }
+      }
+
+      if (response.error) {
+        window.removeEventListener('message', handleMensaje3DS)
+        setError('No se pudo completar la verificación del banco.')
+        setProcesando(false)
+        setStep('monto')
+      }
+    }
+
+    window.addEventListener('message', handleMensaje3DS)
+    window.Culqi3DS.initAuthentication(tokenPagoRef.current)
   }
 
   async function handleFinalizar() {
@@ -104,6 +198,12 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
       setError('Ingresa tu nombre, o marca "Donar en anonimato".')
       return
     }
+    if (!tokenPagoRef.current) {
+      setError('No se encontró el pago. Intenta de nuevo desde el inicio.')
+      setStep('monto')
+      return
+    }
+
     setError('')
     setProcesando(true)
 
@@ -120,11 +220,13 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          proyecto: 'cajon-peruano',
+          proyecto: PROYECTO,
           nombre: donante.nombre,
           monto: donante.monto,
           anonimo: donante.anonimo,
-          fuente: 'cajon-peruano',
+          fuente: PROYECTO,
+          token_pago: tokenPagoRef.current,
+          metodo_pago: 'tarjeta',
         }),
       })
 
@@ -133,6 +235,13 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
       if (!data.ok) {
         setError(data.error || 'Hubo un error al registrar tu donación. Intenta de nuevo.')
         setProcesando(false)
+        return
+      }
+
+      if (data.requiere_3ds) {
+        // El banco pide un paso extra de verificación antes de confirmar.
+        setStep('3ds')
+        await completar3DS(data.id)
         return
       }
     } catch {
@@ -223,7 +332,7 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
                   type="submit"
                   className="mt-6 w-full rounded-lg bg-copper/90 py-3.5 font-mono text-sm font-semibold text-cream transition hover:bg-copper-bright"
                 >
-                  Continuar con Culqui
+                  Continuar con Culqi
                 </button>
               </form>
             )}
@@ -232,7 +341,17 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
               <div className="flex flex-col items-center py-8 text-center">
                 <div className="h-9 w-9 animate-spin rounded-full border-2 border-meter/30 border-t-meter" />
                 <p className="mt-5 font-body text-[14px] text-cream/70">
-                  Procesando tu pago de S/ {monto} de forma segura…
+                  Abriendo el formulario de pago seguro de Culqi…
+                </p>
+              </div>
+            )}
+
+            {step === '3ds' && (
+              <div className="flex flex-col items-center py-8 text-center">
+                <div className="h-9 w-9 animate-spin rounded-full border-2 border-meter/30 border-t-meter" />
+                <p className="mt-5 font-body text-[14px] text-cream/70">
+                  Tu banco pide un paso extra de verificación. Completa el código
+                  que te acaba de enviar…
                 </p>
               </div>
             )}

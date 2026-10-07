@@ -7,6 +7,8 @@ export default function useConfigFrate() {
     comision_pct: 5,
     fee_fijo: 0.74,
     monto_minimo: 15, // fallback, se usa si el fetch falla
+    culqi_public_key: null,
+    culqi_enabled: false,
   })
   const [cargando, setCargando] = useState(true)
 
@@ -19,6 +21,8 @@ export default function useConfigFrate() {
             comision_pct: data.comision_pct,
             fee_fijo: data.fee_fijo,
             monto_minimo: data.monto_minimo,
+            culqi_public_key: data.culqi_public_key || null,
+            culqi_enabled: Boolean(data.culqi_enabled),
           })
         }
       })

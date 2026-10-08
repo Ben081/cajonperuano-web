@@ -96,7 +96,7 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
 
       window.Culqi.publicKey = config.culqi_public_key
       window.Culqi.settings({
-        title: 'Donación Cajón Peruano',
+        title: 'Contribución Voluntaria al Proyecto Cajón Peruano',
         currency: 'PEN',
         amount: Math.round(montoNum * 100),
         ...(orderId ? { order: orderId } : {}),
@@ -299,7 +299,7 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
                   type="submit"
                   className="mt-6 w-full rounded-lg bg-copper/90 py-3.5 font-mono text-sm font-semibold text-cream transition hover:bg-copper-bright"
                 >
-                  Continuar con Culqi
+                  Continuar
                 </button>
               </form>
             )}
@@ -308,7 +308,7 @@ export default function DonarModal({ open, onClose, onDonacionCompletada }) {
               <div className="flex flex-col items-center py-8 text-center">
                 <div className="h-9 w-9 animate-spin rounded-full border-2 border-meter/30 border-t-meter" />
                 <p className="mt-5 font-body text-[14px] text-cream/70">
-                  Abriendo el formulario de pago seguro de Culqi…
+                  Abriendo el formulario para su donacion . . .
                 </p>
               </div>
             )}
